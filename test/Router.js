@@ -186,6 +186,21 @@ describe('Router', function(){
       router.handle({ url: '/bob', method: 'GET' }, {}, function() {});
     });
 
+    it('should treat a rejected promise response as a thrown error', function(done) {
+      var router = new Router();
+
+      router.use(function(req, res, next){
+        return Promise.reject(new Error('boom!'));
+      });
+
+      router.use(function(err, req, res, next){
+        assert.equal(err.message, 'boom!');
+        done();
+      });
+
+      router.handle({ url: '/', method: 'GET' }, {}, done);
+    });
+
     it('should handle throwing inside error handlers', function(done) {
       var router = new Router();
 
@@ -195,6 +210,25 @@ describe('Router', function(){
 
       router.use(function(err, req, res, next){
         throw new Error('oops');
+      });
+
+      router.use(function(err, req, res, next){
+        assert.equal(err.message, 'oops');
+        done();
+      });
+
+      router.handle({ url: '/', method: 'GET' }, {}, done);
+    });
+
+    it('should handle returning a rejected promise inside error handler', function(done) {
+      var router = new Router();
+
+      router.use(function(req, res, next){
+        throw new Error('boom!');
+      });
+
+      router.use(function(err, req, res, next){
+        return Promise.reject(new Error('oops'));
       });
 
       router.use(function(err, req, res, next){
